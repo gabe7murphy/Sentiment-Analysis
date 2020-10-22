@@ -126,7 +126,7 @@ class SentimentStrat(bt.Strategy):
 
 if __name__ == '__main__':
     cerebro = bt.Cerebro()
-    
+    date_sentiment, earliest_date = my_scraper()
     # Strategy
     cerebro.addstrategy(SentimentStrat)
 
