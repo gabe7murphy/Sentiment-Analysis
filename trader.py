@@ -1,14 +1,13 @@
 from __future__ import (absolute_import, division, print_function,
                             unicode_literals)
 
-from scraper import *
 from datetime import datetime, timedelta
+from scraper import my_scraper
 import warnings
 warnings.filterwarnings('ignore')
 
 import backtrader as bt
 import backtrader.indicators as btind
-
 import pandas as pd
 import os.path
 import time
