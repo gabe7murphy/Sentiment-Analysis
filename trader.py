@@ -1,14 +1,14 @@
 from __future__ import (absolute_import, division, print_function,
                             unicode_literals)
 
-from datetime import datetime, timedelta
+import datetime
 from scraper import my_scraper
 import warnings
 warnings.filterwarnings('ignore')
 
 import backtrader as bt
 import backtrader.indicators as btind
-import pandas as pd
+import pandas 
 import os.path
 import time
 import sys
@@ -125,29 +125,35 @@ class SentimentStrat(bt.Strategy):
         
 
 if __name__ == '__main__':
+    # Create cerebro
     cerebro = bt.Cerebro()
     date_sentiment, earliest_date = my_scraper()
     # Strategy
     cerebro.addstrategy(SentimentStrat)
 
     # Data Feed
-    data = bt.feeds.YahooFinanceData(
-        dataname = 'FB',
-        fromdate = earliest_date,
-        todate = datetime.datetime(2019,11,30),
-        reverse = False
-    )
-    
-    cerebro.adddata(data)
+    filepath = 'data\\spy-midpoint-1-day-bars-for-3-m-before-20200718-12-00-00-est.csv' 
+    # Load data from cache into cerebro
+    # df = pandas.read_csv(filepath, usecols = ['DateTime', 'Open_Bid', 'High_Bid', 'Low_Bid', 'Close_Bid', 'Open_Ask', 'High_Ask', 'Low_Ask', 'Close_Ask'])
+    df = pandas.read_csv(filepath, usecols = ['DateTime', 'Open', 'High', 'Low', 'Close', 'Volume'])
+    df.columns = [col_name.lower() for col_name in df.columns]
+    df['datetime'] = pandas.to_datetime(df['datetime'])
+    df.set_index('datetime')
+    print(df.head())
+    data = bt.feeds.PandasData(dataname=df, datetime=0, open=1, high=2, low=3, close=4, volume=5)
+    print(data)
+    # Add second data
+    cerebro.adddata(data)              
+    # Add minute data 
+    cerebro.resampledata(data, timeframe=bt.TimeFrame.Minutes, compression=180)
 
     cerebro.broker.setcash(100000.0)
-    cerebro.addsizer(bt.sizers.FixedSize, stake=10)
-    cerebro.broker.setcommission(commission=0.001)
     print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
     cerebro.run()
     print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
 
 
-sentiment_plot = pd.DataFrame(list(date_sentiment.items()), columns=['Date', 'Sentiment'])
+sentiment_plot = pandas.DataFrame(list(date_sentiment.items()), columns=['Date', 'Sentiment'])
 sentiment_plot.index = sentiment_plot['Date']
 sentiment_plot.plot()
+cerebro.plot(style='candlestick')
